@@ -1,0 +1,7 @@
+com\example\MySpringBean.class
+com\example\InfluxDBConfig.class
+com\example\InfluxDBRouter.class
+com\example\MongoDBRouter.class
+com\example\MySpringBootRouter.class
+com\example\MySpringBootApplication.class
+com\example\MongoConfig.class
