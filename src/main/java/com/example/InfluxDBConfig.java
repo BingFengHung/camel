@@ -33,11 +33,11 @@ public class InfluxDBConfig {
         return InfluxDBClientFactory.create(url, token.toCharArray(), org, bucket);
     }
     
-    @Bean
+   /*  @Bean
     public InfluxDb2Component influxDB2Component(InfluxDBClient influxDBClient) {
     	InfluxDb2Component component = new InfluxDb2Component();
         component.setInfluxDBClient(influxDBClient); // 设置 InfluxDBClient
         return component;
-    }
+    } */
 }
 
