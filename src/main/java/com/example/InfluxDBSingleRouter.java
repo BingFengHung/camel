@@ -22,7 +22,7 @@ import com.influxdb.query.FluxTable;
 public class InfluxDBSingleRouter extends RouteBuilder {
 	@Autowired
 	private InfluxDBClient influxDBClient;
-	private ArrayList<String[]> dataSet;// = new Sampling().GetData("influxdb_test_data.csv");
+	private ArrayList<String[]> dataSet = null; //new Sampling().GetData("influxdb_test_data.csv");
 	WriteApiBlocking writeApi;
 	String bucket = "Test";
 	String org = "Self";
@@ -151,7 +151,7 @@ public class InfluxDBSingleRouter extends RouteBuilder {
 					 .measurement("results")
 					 .addTag("file_name", line)
 					 .addFields(result2.get(i))
-			      .time(baseTime.plusNanos(i), WritePrecision.NS);
+			         .time(baseTime.plusNanos(i), WritePrecision.NS);
 					 //.time(times.get(i), WritePrecision.NS);
 					 //.time(time);
 					 //.time(Instant.now(), WritePrecision.NS);
@@ -167,8 +167,8 @@ public class InfluxDBSingleRouter extends RouteBuilder {
 	public void configure2() throws Exception {
 		writeApi = influxDBClient.getWriteApiBlocking();
 		
-		//from("direct:query")
-		from("timer:once?repeatCount=1")
+		from("direct:query0")
+		//from("timer:once?repeatCount=1")
         .process(exchange -> {
         	System.out.println("InfluxDB Query Start：");
 
@@ -190,7 +190,7 @@ public class InfluxDBSingleRouter extends RouteBuilder {
         .log("查詢結果：${body}");
 		
 		//from("timer:once?repeatCount=1")
-		from("direct:query")
+		from("direct:query1")
 		.process(ch -> {
 			long totalMilliseconds = 0;
 			for (int i = 0; i < dataSet.size(); i += 10000) {

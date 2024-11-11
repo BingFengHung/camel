@@ -1,12 +1,14 @@
 package com.example;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.bson.Document;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.mongodb.client.MongoClient;
@@ -15,24 +17,25 @@ import com.mongodb.client.MongoDatabase;
 
 @Component
 public class MongoDBSingleRouter extends RouteBuilder {
-	private ArrayList<String[]> dataSet = new Sampling().GetData("influxdb_test_data.csv");
+    @Autowired
+	private ArrayList<String[]> dataSet; //= new Sampling().GetData("influxdb_test_data.csv");
 	MongoClient client = MongoClients.create("mongodb://admin:aaaa999999@localhost:27017");
 	MongoDatabase database = client.getDatabase("test");
+    private String db = "test"; // results;
+    private String collectionName = "results"; // results;
 	
 	
     public void configure2() throws Exception {}
     	
-    @Override
-        public void configure() throws Exception {
-		
-		 from("timer:once?repeatCount=1") // 每10秒觸發一次
-		 //from("direct:query")
+    @Override 
+    public void configure() throws Exception {
+		 //from("timer:once?repeatCount=1") // 每10秒觸發一次
+		 from("direct:query3")
 		 .process(exchange -> {
-        	 System.out.println("MongoDB Start");
+        	 System.out.println("MongoDB Insertion Start：");
         	 long totalMilliseconds = 0;
         	 for (int i = 0; i < dataSet.size(); i+= 10000) {
         		 var doc = getDocuments(i, 10000);
-        		 
         		 
         		 var times = writeDocumentsSynchronously(doc);
         		 totalMilliseconds += times;
@@ -49,10 +52,10 @@ public class MongoDBSingleRouter extends RouteBuilder {
  			System.out.println("MongoDB 總花費時間：" + totalMilliseconds);
          });
 		 
-		from("direct:query")
+		from("direct:query4")
 		 //from("timer:once?repeatCount=1")
 		 .process(exchange -> {
-        	 System.out.println("MongoDB Start");
+        	 System.out.println("MongoDB Retrival Start");
         	 long totalMilliseconds = queryRecentBatches(500000, 10000);
         	 long durationInMillis = totalMilliseconds; // / 1_000_000; // Total duration in milliseconds
 
@@ -91,28 +94,67 @@ public class MongoDBSingleRouter extends RouteBuilder {
 //            .to("mongodb:myMongoBean?database=test&collection=temperature_data&operation=findAll")
 //            .log("查詢結果：${body}");
     }
-    
-    public long queryRecentBatches(int totalRecords, int batchSize) {
+     public long queryRecentBatches(int totalRecords, int batchSize) {
+        long totalDuration = 0;
+        var collection = database.getCollection(collectionName);
+        
+        long s = System.nanoTime();
+        try (var cursor = collection.find().iterator()) {
+            int fetchedRecords = 0;
+            while (fetchedRecords < totalRecords && cursor.hasNext()) {
+                List<Document> batchDocuments = new ArrayList<>();
+                long startTime = System.nanoTime();
+                // 获取下一批数据
+                for (int i = 0; i < batchSize && cursor.hasNext(); i++) {
+                    batchDocuments.add(cursor.next());
+                    fetchedRecords++;
+                }
+                long endTime = System.nanoTime();
+                long duration = (endTime - startTime) / 1_000_000; // 毫秒
+                totalDuration += duration;
+                
+                System.out.println("Batch fetched: " + batchDocuments.size() + " documents in " + duration + " ms");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        long e = System.nanoTime();
+        long m = (e - s) / 1_000_000; // 查询时间转换为毫秒
+        System.out.println("Total duration for fetching " + totalRecords + " records in batches of " + batchSize + ": " + totalDuration + " ms");
+        
+        return totalDuration;
+    }
+
+    public long queryRecentBatches4(int totalRecords, int batchSize) {
         long totalDuration = 0;
         int fetchedRecords = 0;
 
         while (fetchedRecords < totalRecords) {
             long startTime = System.nanoTime();
-            var collection = database.getCollection("results");
+            var collection = database.getCollection(collectionName);
+            List<Document> batchDocuments = new ArrayList<>();
+            
+            
             // 查詢最近的批次資料，限制為 batchSize
             try (var cursor = collection.find()
-                    .sort(new Document("_id", -1)) // 依照 _id 以降序排序，取得最新資料
                     .skip(fetchedRecords) // 跳過已查詢的筆數
                     .limit(batchSize)
                     .iterator()) {
+            	
+            	
                 
-                List<Document> batchDocuments = new ArrayList<>();
                 while (cursor.hasNext()) {
-                    batchDocuments.add(cursor.next());
+                    //batchDocuments.add(cursor.next());
+                    cursor.next();
                 }
-                System.out.println(batchDocuments.get(0).toJson());
-                fetchedRecords += batchDocuments.size();
+
                 long endTime = System.nanoTime();
+
+                //System.out.println(batchDocuments.get(0).toJson());
+                //System.out.println(batchDocuments.size());
+                fetchedRecords += batchSize;//batchDocuments.size();
+                
                 
                 long duration = (endTime - startTime) / 1_000_000; // 將查詢時間轉換為毫秒
                 totalDuration += duration;
@@ -128,7 +170,7 @@ public class MongoDBSingleRouter extends RouteBuilder {
     
     public long queryPointsSynchronously(int start, int batchSize) {
         System.out.println("Start: " + start + ", Batch Size: " + batchSize);
-        var collection = database.getCollection("results");
+        var collection = database.getCollection(collectionName);
         // 設定查詢條件，這裡假設每個 document 的 field 格式符合插入語法
         Document filter = new Document();
         for (int j = 2; j < batchSize + 2; j++) {  // 假設 "ch" 欄位在查詢中是重要的條件
@@ -154,7 +196,7 @@ public class MongoDBSingleRouter extends RouteBuilder {
 			System.out.println(name);
 		}
 		
-		var collection = database.getCollection("results");
+		var collection = database.getCollection(collectionName);
 		
 		long startTime = 0;
 		try {
@@ -179,6 +221,8 @@ public class MongoDBSingleRouter extends RouteBuilder {
     
         List<Map<String, Object>> documents = new ArrayList<>();
         
+        var times = System.nanoTime();
+        int increment = 0;
         for (String[] arr : batch) {
             Map<String, Object> document = new HashMap<>();
             
@@ -187,6 +231,9 @@ public class MongoDBSingleRouter extends RouteBuilder {
                 document.put("ch" + (j - 1), Double.parseDouble(arr[j]));
             }
             
+            //document.put("timestamp", new Date(times + increment));
+            document.put("timestamp", times + increment);
+            increment++;
             // 將每一個 document 加入到結果列表中
             documents.add(document);
         }

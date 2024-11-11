@@ -3,12 +3,18 @@ package com.example;
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.InfluxDBClientFactory;
 
+import java.util.ArrayList;
+
 import org.apache.camel.component.influxdb2.InfluxDb2Component;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class InfluxDBConfig {
+    @Bean
+	public ArrayList<String[]> dataSet() { 
+		return new Sampling().GetData("influxdb_test_data.csv");
+	}
 
     @Bean
     public InfluxDBClient influxDBClient() {
