@@ -1,0 +1,4 @@
+MongoDB ´¡¤J©µ¿ð: 100 msMongoDB ´¡¤J©µ¿ð: 3 msMongoDB ´¡¤J©µ¿ð: 2 msMongoDB ´¡¤J©µ¿ð: 3 msMongoDB ´¡¤J©µ¿ð: 2 msMongoDB ´¡¤J©µ¿ð: 2 msMongoDB ´¡¤J©µ¿ð: 119 ms
+MongoDB ´¡¤J©µ¿ð: 3 ms
+MongoDB ´¡¤J©µ¿ð: 10 ms
+MongoDB ´¡¤J©µ¿ð: 2 ms

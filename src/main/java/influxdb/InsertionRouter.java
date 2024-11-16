@@ -33,7 +33,7 @@ public class InsertionRouter extends RouteBuilder {
 		writeApi = influxDBClient.getWriteApiBlocking();
 		
 		//from("timer:once?repeatCount=1")
-		from("direct:influxdb-insertion")
+		from("direct:influxdb-insertion").routeId("influxdbInsertionRoute")
 		.process(exchange -> {
 			System.out.println("InfluxDB Insertion Start:");
 			long totalMilliseconds = 0;

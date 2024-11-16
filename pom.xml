@@ -38,8 +38,16 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  
 
   <dependencies>
+    <!-- http -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-http</artifactId>
+      <version>4.0.2</version> <!-- 確保版本與你的 Camel 版本相匹配 -->
+    </dependency>
+
     <!-- MongoDB -->
     <dependency>
       <groupId>org.apache.camel</groupId>

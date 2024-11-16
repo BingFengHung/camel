@@ -1,0 +1,4 @@
+InfluxDB ´¡¤J©µ¿ð: 52 msInfluxDB ´¡¤J©µ¿ð: 4 msInfluxDB ´¡¤J©µ¿ð: 3 msInfluxDB ´¡¤J©µ¿ð: 3 msInfluxDB ´¡¤J©µ¿ð: 2 msInfluxDB ´¡¤J©µ¿ð: 2 msInfluxDB ´¡¤J©µ¿ð: 45 ms
+InfluxDB ´¡¤J©µ¿ð: 3 ms
+InfluxDB ´¡¤J©µ¿ð: 3 ms
+InfluxDB ´¡¤J©µ¿ð: 2 ms

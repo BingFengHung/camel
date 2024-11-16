@@ -1,13 +1,17 @@
 package com.example;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.camel.ProducerTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class HelloController {
-     @Autowired
+    @Autowired
     private ProducerTemplate producerTemplate;
 
     @GetMapping("/influxdb-insert")
@@ -45,4 +49,20 @@ public class HelloController {
         return result;
     }
 
+    // @GetMapping("/performance/{thread}")
+    // public String writePerformance(@PathVariable("thread") int thread) {
+    //     String result = producerTemplate.requestBodyAndHeader("direct:writePerformance", null, "thread", thread, String.class);
+    //     return result;
+    // }
+
+    @GetMapping("/performance/{thread}/{count}")
+    public String writePerformance(@PathVariable("thread") int thread, @PathVariable("count") int count) {
+        // 假設你也想將 id 作為 header 傳遞
+        Map<String, Object> headers = new HashMap<>();
+        headers.put("thread", thread);
+        headers.put("count", count);
+
+        String result = producerTemplate.requestBodyAndHeaders("direct:writePerformance", null, headers, String.class);
+        return result;
+    }
 }
