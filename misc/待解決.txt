@@ -1,0 +1,231 @@
+以下是針對不同場景的完整測試腳本與配置，分別使用 **InfluxDB** 和 **MongoDB**。測試包含 **單值寫入**、**多值寫入**，以及對應的查詢測試。這些測試適用於高併發場景，並記錄 **吞吐量 (throughput)** 和 **延遲 (latency)**。
+
+---
+
+### **測試工具環境**
+- **Spring Boot** + **Apache Camel** 用於模擬讀寫。
+- **InfluxDB 2.x** 作為時間序列數據庫。
+- **MongoDB 4.x+** 作為文檔數據庫。
+- **多線程模擬高併發**。
+
+---
+
+### **1. 單值寫入測試**
+#### **InfluxDB 單值寫入**
+每次插入一個數據點，測試寫入性能。
+
+```java
+@Component
+public class InfluxDbSingleWriteTestRoute extends RouteBuilder {
+
+    @Override
+    public void configure() throws Exception {
+        from("timer:influxSingleWrite?period=10") // 每 10ms 寫一次
+            .routeId("influxSingleWriteTestRoute")
+            .threads(10) // 使用 10 個線程
+            .process(exchange -> {
+                String dataPoint = "temperature,sensor_id=sensor1 value=22.5 " + System.currentTimeMillis();
+                exchange.getMessage().setBody(dataPoint);
+            })
+            .to("influxdb://http://localhost:8086?database=testdb&operation=write");
+    }
+}
+```
+
+---
+
+#### **MongoDB 單值寫入**
+每次插入一個文檔，測試寫入性能。
+
+```java
+@Component
+public class MongoDbSingleWriteTestRoute extends RouteBuilder {
+
+    @Override
+    public void configure() throws Exception {
+        from("timer:mongoSingleWrite?period=10") // 每 10ms 寫一次
+            .routeId("mongoSingleWriteTestRoute")
+            .threads(10) // 使用 10 個線程
+            .process(exchange -> {
+                Map<String, Object> document = Map.of(
+                    "sensor_id", "sensor1",
+                    "value", 22.5,
+                    "timestamp", System.currentTimeMillis()
+                );
+                exchange.getMessage().setBody(document);
+            })
+            .to("mongodb:myDb?database=testdb&collection=temperature&operation=insert");
+    }
+}
+```
+
+---
+
+### **2. 多值寫入測試**
+#### **InfluxDB 多值寫入**
+每次插入多個欄位（fields），模擬傳感器數據。
+
+```java
+@Component
+public class InfluxDbMultiWriteTestRoute extends RouteBuilder {
+
+    @Override
+    public void configure() throws Exception {
+        from("timer:influxMultiWrite?period=10") // 每 10ms 寫一次
+            .routeId("influxMultiWriteTestRoute")
+            .threads(10) // 使用 10 個線程
+            .process(exchange -> {
+                String dataPoint = "environmental,sensor_id=sensor1 temperature=22.5,humidity=45.6 " + System.currentTimeMillis();
+                exchange.getMessage().setBody(dataPoint);
+            })
+            .to("influxdb://http://localhost:8086?database=testdb&operation=write");
+    }
+}
+```
+
+---
+
+#### **MongoDB 多值寫入**
+每次插入一個文檔，包含多個欄位。
+
+```java
+@Component
+public class MongoDbMultiWriteTestRoute extends RouteBuilder {
+
+    @Override
+    public void configure() throws Exception {
+        from("timer:mongoMultiWrite?period=10") // 每 10ms 寫一次
+            .routeId("mongoMultiWriteTestRoute")
+            .threads(10) // 使用 10 個線程
+            .process(exchange -> {
+                Map<String, Object> document = Map.of(
+                    "sensor_id", "sensor1",
+                    "temperature", 22.5,
+                    "humidity", 45.6,
+                    "timestamp", System.currentTimeMillis()
+                );
+                exchange.getMessage().setBody(document);
+            })
+            .to("mongodb:myDb?database=testdb&collection=environmental&operation=insert");
+    }
+}
+```
+
+---
+
+### **3. 範圍查詢測試**
+#### **InfluxDB 範圍查詢**
+查詢過去一小時的數據，測試吞吐量。
+
+```java
+@Component
+public class InfluxDbRangeQueryTestRoute extends RouteBuilder {
+
+    @Override
+    public void configure() throws Exception {
+        from("timer:influxRangeQuery?period=10") // 每 10ms 查一次
+            .routeId("influxRangeQueryTestRoute")
+            .threads(10) // 使用 10 個線程
+            .setBody(constant("from(bucket: \"test_bucket\") |> range(start: -1h)"))
+            .to("influxdb://http://localhost:8086?database=testdb&operation=query")
+            .to("log:influxQueryResponse?level=INFO");
+    }
+}
+```
+
+---
+
+#### **MongoDB 範圍查詢**
+查詢過去一小時的數據，測試吞吐量。
+
+```java
+@Component
+public class MongoDbRangeQueryTestRoute extends RouteBuilder {
+
+    @Override
+    public void configure() throws Exception {
+        from("timer:mongoRangeQuery?period=10") // 每 10ms 查一次
+            .routeId("mongoRangeQueryTestRoute")
+            .threads(10) // 使用 10 個線程
+            .process(exchange -> {
+                Map<String, Object> query = Map.of(
+                    "timestamp", Map.of("$gte", System.currentTimeMillis() - 3600000)
+                );
+                exchange.getMessage().setBody(query);
+            })
+            .to("mongodb:myDb?database=testdb&collection=temperature&operation=findAll")
+            .to("log:mongoQueryResponse?level=INFO");
+    }
+}
+```
+
+---
+
+### **4. 聚合查詢測試**
+#### **InfluxDB 聚合查詢**
+計算每個傳感器的平均值，測試吞吐量。
+
+```java
+@Component
+public class InfluxDbAggregationTestRoute extends RouteBuilder {
+
+    @Override
+    public void configure() throws Exception {
+        from("timer:influxAggregationQuery?period=10") // 每 10ms 查一次
+            .routeId("influxAggregationQueryTestRoute")
+            .threads(10) // 使用 10 個線程
+            .setBody(constant("from(bucket: \"test_bucket\") |> range(start: -1h) |> mean() |> group(columns: [\"sensor_id\"])"))
+            .to("influxdb://http://localhost:8086?database=testdb&operation=query")
+            .to("log:influxAggregationResponse?level=INFO");
+    }
+}
+```
+
+---
+
+#### **MongoDB 聚合查詢**
+計算每個傳感器的平均值，測試吞吐量。
+
+```java
+@Component
+public class MongoDbAggregationTestRoute extends RouteBuilder {
+
+    @Override
+    public void configure() throws Exception {
+        from("timer:mongoAggregationQuery?period=10") // 每 10ms 查一次
+            .routeId("mongoAggregationQueryTestRoute")
+            .threads(10) // 使用 10 個線程
+            .process(exchange -> {
+                List<Map<String, Object>> pipeline = List.of(
+                    Map.of("$match", Map.of("timestamp", Map.of("$gte", System.currentTimeMillis() - 3600000))),
+                    Map.of("$group", Map.of("_id", "$sensor_id", "avg_value", Map.of("$avg", "$value")))
+                );
+                exchange.getMessage().setBody(pipeline);
+            })
+            .to("mongodb:myDb?database=testdb&collection=temperature&operation=aggregate")
+            .to("log:mongoAggregationResponse?level=INFO");
+    }
+}
+```
+
+---
+
+### **5. 測試結果記錄與分析**
+#### **吞吐量與延遲統計**
+1. 在 Camel 中添加計數器：
+   ```java
+   .to("metrics:counter:test_counter")
+   ```
+
+2. 使用 `System.currentTimeMillis()` 計算延遲，並記錄每秒完成的操作數。
+
+#### **監控資源使用**
+- 使用 **Prometheus** + **Grafana** 監控 MongoDB 和 InfluxDB 的 CPU 和記憶體使用。
+
+---
+
+### **6. 注意事項**
+- 測試時，調整線程數量（如 10、50、100）模擬不同併發場景。
+- 測試數據量應足夠大，確保查詢能反映真實性能。
+
+需要幫助進一步整合或優化測試配置，隨時告訴我！

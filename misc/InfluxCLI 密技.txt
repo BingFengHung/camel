@@ -1,0 +1,19 @@
+InfluxCLI
+
+PowerShell 刪除語法：
+
+ .\influx delete --org Self --bucket Test --token _2XEEscy2IXSFp5UXghYe5-T2kHxoFt5hh_VEHXsmXHeyQJ6QGTTlMSqqst5U0M5nAaWxILp3_fMBkvON2NUCw== --start 2024-11-01T00:00:00Z --stop 2024-11-11T23:59:59Z --predicate '_measurement="results" AND file_name="file-00"'
+
+
+
+from(bucket: "Test")
+  |> range(start: -30d)
+  |> filter(fn: (r) =>
+      r._measurement == "results" and r.file_name == "file_0"
+  )
+  |> count()
+
+mvn spring-boot:run
+
+
+mongod.exe --dbpath=.\db --auth
