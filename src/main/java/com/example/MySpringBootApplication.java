@@ -5,7 +5,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.example", "influxdb", "mongodb.document", "mongodb.timeSeries", "performance"}) 
+@ComponentScan(basePackages = {
+    // "com.example", 
+    // "influxdb", 
+    // "mongodb.document", 
+    // "mongodb.timeSeries", 
+    // "performance"
+    "com.joe"
+}) 
 public class MySpringBootApplication {
 
     /**

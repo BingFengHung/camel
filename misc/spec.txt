@@ -1,0 +1,38 @@
+測試項目：
+- 高併發情況下的寫入與讀取
+- 頻率： 10ms
+- 每個設備有 5 個 chamber，並且每個 chamber 有兩種資料類型，一種資料類型一共會有 10kb 的資料要傳輸
+
+每 10 秒鐘寫入資料庫一次
+
+預計每次寫入 10kb 的資料
+
+一共有 89 個設備
+
+資料有分為 Continuous data 與 Data fusion data
+
+然後每種資料一共是 10kb 
+
+因此要 89 個設備高併發同時寫入到 influxdb 與 mongodb 中
+
+這邊的測試資料大約 15kb
+
+sensor, chamber_id=chamber01,data_type=continous STEPNAME="test",Coater_EXIT_ARM_A_OPEN=0,Coater_Entrance_ARM_B_CLOSE=23,,FLOOR_FANS=1,A_SIDE_INK4_offset=98.0,A_SIDE_INK3_offset=98.0,A_SIDE_scraper_pushback=0.471,HUMIDITY_2_A=548,COATER_LAMP=0,A_SIDE_INK4_FLOW=3.52,TRACEDATETIME="2024-01-01 23:59:59",Coater_Entrance_ARM_A_OPEN=24,A_SIDE_INK3_FLOW=3.52,Metone_PPIC_05um=0,Metone_PPIC_03um=0,STIME="2024-01-01 23:59:59",A_Coater_table_upside_height=1.489,Metone_PPIC_5um=0,Metone_BEFORE_PRE_BAKE_AIR_VALUE=599,Meton_BF1_03um=1,INK4_WEIGHT=82830,COATER_EXIT_CDA=1,DOCTOR=0,Metone_BF1_05um=1,INK3_WEIGHT=59361,Metone_PPIC_1um=0,TEMP_1_A=241,ROBOT_SERVO="Mitsubishi",Coater_Entrance_ARM_B_OPEN=23
+,Meton-COATER_AIR_VALUE=473,DISPENSER_A_B=0,A_SIDE_INK4_PRESSURE=160,Meton_AFTER_PRE_BAKE_AIR_VALUE=498,Metone_BF2_05um=10,Metone_BF2_03um=21,Meton_AFTER_PRE_BAKE_03um=31,AFD1_flow6=-0.318,AFD1_flow5=-0.346,Metone_AFTER_PRE_BAKE_05um=11,AFD1_flow8=-0.193,Metone_BF1_AIR_VALUE=534,AFD1_flow7=-0.42,AFD1_flow9=-0.25,Metone_COATER_03um=6,A_SIDE_INK3_PRESSURE=143,Metone-COATER_05um=2,A_SIDE_scraper_height_L=-6.1985,AFD1_flow2=-0.26,AFD1_flow1=-0.141,HUMIDITY_13_A=606,Metone_AFTER_PRE_BAKE_5um=0,Coater_EXIT_ARM_B_CLOSE=18,A_SIDE_scraper_height_R=-5.44,HUMIDITY_1_A=548,AFD1_direction2=1,AFD1_flow11=-0.413,AFD1_direction5=1,AFD1_flow10=-0.709,Metone_BEFORE_PRE_BAKE_05um=2,Metone_BF2_1um=2,AFD1_direction6=0,AFD1_direction7=1,AFD1_flow12=-0.11,Metone_AFTER_PRE_BAKE_1um=3,Metone_AFTER_PRE_BAKE_03um=4,AFD1_direction8=1,AFD1_direction9=1,Metone_BF2_5um=0,Metone_BF2_AIR_VALUE=653,Metone_PPIC_AIR_VALUE=470,TEMP_13_A=249,COATER_ENTRANCE_CDA=1,ENTRANCE_ROBOT_SERVO=0,FANS2=262,FANS1=262,Coater_Entrance_ARM_A_CLOSE=0,Metone_BEFORE_PRE_BAKE_1um=1,AFD1_direction11=1,AFD1_direction12=1,Metone_BEFORE_PRE_BAKE_5um=0,AFD1_direction10=1,TEMP_2_A=242,LAMP_STATE=0,DISPENSER_B_A=106,Coater_EXIT_ARM_A_CLOSE=19,EXIT_ROBOT_SERVO=0,Metone_COATER_1um=1,TEMP_23_A=253,AFD1_direction1=1,Coater_EXIT_ARM_B_OPEN=0,Metone_COATER_5um=0,Metone_BF1_1um=0,Metone_BF1_5um=0,HUMIDITY_24_A=594
+
+所以每次會寫入 10 筆資料到資料庫中
+
+## 測試資料紀錄
+
+最後把花費的時間記錄下來
+
+紀錄要有原始紀錄的檔案
+
+因為後面會用這個原始紀錄的檔案進行統計 (max、min、avg)
+
+每次測試大約 3 分鐘
+
+這 3 分鐘內這 89 個設備會每 10 秒寫入資料庫
+
+寫入的資料應該要有一個規格檔案，去定義每個欄位的資料設定範圍然後用變數去產生這一次寫入的數值
+進階

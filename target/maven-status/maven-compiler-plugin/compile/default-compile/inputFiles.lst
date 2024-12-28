@@ -8,6 +8,7 @@ C:\Users\User X\Desktop\Env\camel\src\main\java\mongodb\document\MongoInsertionR
 C:\Users\User X\Desktop\Env\camel\src\main\java\mongodb\timeSeries\MongoTSInsertionRouter.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\influxdb\InsertionRouter.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\com\example\InfluxDBConfig.java
+C:\Users\User X\Desktop\Env\camel\src\main\java\performance\InfluxDbBatchWriteRouter.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\com\example\MySpringBootRouter.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\mongodb\document\MongoRetrievalRouter.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\com\example\MongoDBRouter.java
@@ -17,6 +18,7 @@ C:\Users\User X\Desktop\Env\camel\src\main\java\com\example\InfluxDBRouter.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\com\example\Sampling.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\com\example\PerformanceController.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\com\example\MongoDBTimeSeriesRouter.java
+C:\Users\User X\Desktop\Env\camel\src\main\java\com\joe\WriteBulkRouter.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\mongodb\timeSeries\MongoTSRetrievalRouter.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\com\example\MySpringBean.java
 C:\Users\User X\Desktop\Env\camel\src\main\java\performance\WritePerformanceRouter.java
