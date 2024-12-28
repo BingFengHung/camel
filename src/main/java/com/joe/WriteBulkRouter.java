@@ -5,6 +5,10 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,12 +25,17 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class WriteBulkRouter extends RouteBuilder {
+  final int repeatCount = 2;
 
   @Override
   public void configure() throws Exception {
-    from("timer:writeMockTest?period=10000&repeatCount=2") 
-    .setProperty("repeatCount", constant(2))
-    .log("run")
+    ZoneId zoneIdOfTaipei = ZoneId.of("Asia/Taipei");
+    DateTimeFormatter formater = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.now(), zoneIdOfTaipei);
+    String filename = "influxdb_" + zdt.format(formater);
+    from("timer:writeMockTest?period=10000&repeatCount=" + repeatCount) 
+    .setProperty("repeatCount", constant(repeatCount))
+    .setProperty("filename", constant(filename))
     .process(new WriteMockProcessor())
     .process(new LoggerProcessor())
     .process(new AnalyzerProcessor())
@@ -45,6 +54,8 @@ class WriteMockProcessor implements Processor {
     ConcurrentHashMap<String, Long> simulatedDatabase = new ConcurrentHashMap<>();
     exchange.setProperty("simulatedDatabase", simulatedDatabase);
     
+    long startTime = System.currentTimeMillis();
+
     for (int i = 0; i < THREAD_COUNT; i++) {
       final int threadIndex = i + 1;
       executor.submit(() -> {
@@ -59,6 +70,8 @@ class WriteMockProcessor implements Processor {
     latch.await();
 
     executor.shutdown();
+    long endTime = System.currentTimeMillis();
+    System.out.println("Total time: " + (endTime - startTime));
     
     List<String> times = new ArrayList<>();
     simulatedDatabase.forEach((key, value) -> times.add(value + ""));
@@ -75,10 +88,10 @@ class WriteMockProcessor implements Processor {
   private void insertDataFake(ConcurrentHashMap<String, Long> simulatedDatabase, int threadIndex) {
     long startTime = System.currentTimeMillis();
     
-    double value = Math.random() * 200.0;
+    //double value = Math.random() * 200.0;
     
     try { 
-      Thread.sleep((long)(Math.random() * 100));
+      Thread.sleep((long)(Math.random() * 100 + 1)); // simulate process working 
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
@@ -96,20 +109,22 @@ class WriteMockProcessor implements Processor {
 }
 
 class LoggerProcessor implements Processor {
-
   @Override
   public void process(Exchange exchange) throws Exception { 
+    @SuppressWarnings("unchecked")
     List<String> value = (List<String>) exchange.getProperty("times");
     String content = String.join(",", value); 
+    
+    System.out.println(exchange.getProperty("filename"));
 
-    String filename = "raw.txt";
+    String filename = (String)exchange.getProperty("filename");
+    // String filename = "raw.txt";
     
     try(BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) {
       writer.write(content);
       writer.newLine();
     }
     
-    exchange.setProperty("filename", filename);
   }
 }
 
