@@ -11,7 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
     // "mongodb.document", 
     // "mongodb.timeSeries", 
     // "performance"
-    "com.joe"
+    "com.joe.thoughput"
 }) 
 public class MySpringBootApplication {
 
