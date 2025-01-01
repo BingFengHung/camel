@@ -1,4 +1,4 @@
-package com.joe.thoughput;
+package com.joe.thoughput.influxDB;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,10 +16,11 @@ public class InfluxDbWriteThroughputRouter extends RouteBuilder {
   @Override
   public void configure() throws Exception {
     CamelLogger logger = new CamelLogger("ThroughputLogger");
-    var throughputLogger = new ThroughputLogger(logger, 10000);
+    var throughputLogger = new ThroughputLogger(logger, 1000);
 
     from("timer:influxTest?period=10")
       .routeId("InfluxDBWriteTest") 
+      .autoStartup(false) // 禁止路由自動啟動
       .split().method(TestDataGenerator.class, "generateBatchData")
       .parallelProcessing().threads(10)
       .process(throughputLogger)
@@ -45,7 +46,7 @@ class ThroughputProcessor implements Processor {
   @Override
   public void process(Exchange exchange) throws Exception {
     counter++; 
-    if (counter % 10000 == 0) { // 每處理1000筆數據時記錄
+    if (counter % 1000 == 0) { // 每處理1000筆數據時記錄
             long elapsedTime = System.nanoTime() - startTime;
             double throughput = counter / (elapsedTime / 1_000_000_000.0);
             System.out.println("Throughput: " + throughput + " messages/second");
