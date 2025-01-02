@@ -1,0 +1,1 @@
+cmd: chcp 65001 && typeperf "\Process(influxd)\% Processor Time" "\Process(influxd)\Working Set - Private" "\Process(influxd)\Private Bytes" -si 5 -sc 1
